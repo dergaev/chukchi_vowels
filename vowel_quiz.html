@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vowel quiz</title>
+
+<style>
+:root {
+  --bg: #f6f7fb;
+  --card: #ffffff;
+  --ink: #1f2328;
+  --muted: #646b75;
+  --line: #e6e8ee;
+  --shadow: 0 14px 36px rgba(20, 24, 32, 0.10);
+  --radius: 22px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.page {
+  width: min(760px, 100%);
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.hero,
+.quiz-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.hero {
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.quiz-card {
+  padding: 22px;
+}
+
+h1 {
+  margin: 0 0 8px 0;
+  font-size: clamp(1.45rem, 4vw, 2.2rem);
+  letter-spacing: -0.03em;
+}
+
+p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+button {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 18px;
+  min-height: 46px;
+  font-size: 1rem;
+  font-weight: 750;
+  cursor: pointer;
+  transition: transform .12s ease, opacity .12s ease, box-shadow .12s ease;
+}
+
+button:active {
+  transform: scale(.98);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+.primary {
+  background: #1f2328;
+  color: white;
+  box-shadow: 0 8px 20px rgba(31, 35, 40, 0.2);
+}
+
+.secondary {
+  background: #eceff4;
+  color: #1f2328;
+}
+
+.button-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.question-title {
+  font-size: 1.35rem;
+  margin: 0 0 4px 0;
+}
+
+.progress {
+  font-weight: 800;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.audio-panel {
+  background: #f0f3f8;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 18px;
+  text-align: center;
+  margin: 16px 0;
+}
+
+.play {
+  width: 100%;
+  margin-top: 14px;
+}
+
+.choices {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.choice {
+  border-radius: 18px;
+  min-height: 70px;
+  font-size: 1.35rem;
+  background: #eceff4;
+  color: #1f2328;
+}
+
+.choice.correct {
+  background: #caf7d7;
+}
+
+.choice.incorrect {
+  background: #ffd3d3;
+}
+
+.feedback {
+  min-height: 32px;
+  margin-top: 16px;
+  text-align: center;
+  font-weight: 800;
+}
+
+.footer {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.footer button {
+  flex: 1;
+}
+
+.score {
+  text-align: center;
+  font-size: clamp(3rem, 15vw, 5rem);
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  margin: 16px 0 8px;
+}
+
+.score-message {
+  text-align: center;
+  max-width: 38rem;
+  margin: 0 auto;
+}
+
+.small-note {
+  margin-top: 10px;
+  font-size: .92rem;
+  color: var(--muted);
+}
+
+@media (max-width: 680px) {
+  .page {
+    padding: 10px;
+  }
+
+  .hero,
+  .quiz-card {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .topline {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .choices {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .choice {
+    min-height: 64px;
+  }
+
+  .button-row,
+  .footer {
+    flex-direction: column;
+  }
+
+  button {
+    width: 100%;
+  }
+}
+</style>
+</head>
+
+<body>
+<main class="page">
+  <section class="hero">
+    <h1>Тест на распознавание чукотских гласных</h1>
+    <p>
+      Вы услышите 10 случайных сегментов, ваша задача угадать, какая это фонема.
+    </p>
+    <div class="button-row">
+      <button class="primary" id="start">Начать тест</button>
+    </div>
+  </section>
+
+  <section class="quiz-card" id="quiz">
+    <p>Нажмите “Начать тест”, чтобы начать.</p>
+  </section>
+</main>
+
+<script>
+const DATA = [{"vowel": "a", "number": 0, "filename": "a_0.wav"}, {"vowel": "a", "number": 1, "filename": "a_1.wav"}, {"vowel": "a", "number": 10, "filename": "a_10.wav"}, {"vowel": "a", "number": 11, "filename": "a_11.wav"}, {"vowel": "a", "number": 12, "filename": "a_12.wav"}, {"vowel": "a", "number": 13, "filename": "a_13.wav"}, {"vowel": "a", "number": 14, "filename": "a_14.wav"}, {"vowel": "a", "number": 155, "filename": "a_155.wav"}, {"vowel": "a", "number": 156, "filename": "a_156.wav"}, {"vowel": "a", "number": 157, "filename": "a_157.wav"}, {"vowel": "a", "number": 161, "filename": "a_161.wav"}, {"vowel": "a", "number": 162, "filename": "a_162.wav"}, {"vowel": "a", "number": 163, "filename": "a_163.wav"}, {"vowel": "a", "number": 173, "filename": "a_173.wav"}, {"vowel": "a", "number": 175, "filename": "a_175.wav"}, {"vowel": "a", "number": 177, "filename": "a_177.wav"}, {"vowel": "a", "number": 179, "filename": "a_179.wav"}, {"vowel": "a", "number": 2, "filename": "a_2.wav"}, {"vowel": "a", "number": 263, "filename": "a_263.wav"}, {"vowel": "a", "number": 265, "filename": "a_265.wav"}, {"vowel": "a", "number": 267, "filename": "a_267.wav"}, {"vowel": "a", "number": 284, "filename": "a_284.wav"}, {"vowel": "a", "number": 286, "filename": "a_286.wav"}, {"vowel": "a", "number": 288, "filename": "a_288.wav"}, {"vowel": "a", "number": 290, "filename": "a_290.wav"}, {"vowel": "a", "number": 292, "filename": "a_292.wav"}, {"vowel": "a", "number": 294, "filename": "a_294.wav"}, {"vowel": "a", "number": 3, "filename": "a_3.wav"}, {"vowel": "a", "number": 312, "filename": "a_312.wav"}, {"vowel": "a", "number": 313, "filename": "a_313.wav"}, {"vowel": "a", "number": 314, "filename": "a_314.wav"}, {"vowel": "a", "number": 315, "filename": "a_315.wav"}, {"vowel": "a", "number": 316, "filename": "a_316.wav"}, {"vowel": "a", "number": 317, "filename": "a_317.wav"}, {"vowel": "a", "number": 318, "filename": "a_318.wav"}, {"vowel": "a", "number": 319, "filename": "a_319.wav"}, {"vowel": "a", "number": 320, "filename": "a_320.wav"}, {"vowel": "a", "number": 342, "filename": "a_342.wav"}, {"vowel": "a", "number": 343, "filename": "a_343.wav"}, {"vowel": "a", "number": 370, "filename": "a_370.wav"}, {"vowel": "a", "number": 371, "filename": "a_371.wav"}, {"vowel": "a", "number": 372, "filename": "a_372.wav"}, {"vowel": "a", "number": 373, "filename": "a_373.wav"}, {"vowel": "a", "number": 374, "filename": "a_374.wav"}, {"vowel": "a", "number": 375, "filename": "a_375.wav"}, {"vowel": "a", "number": 376, "filename": "a_376.wav"}, {"vowel": "a", "number": 377, "filename": "a_377.wav"}, {"vowel": "a", "number": 378, "filename": "a_378.wav"}, {"vowel": "a", "number": 379, "filename": "a_379.wav"}, {"vowel": "a", "number": 380, "filename": "a_380.wav"}, {"vowel": "a", "number": 381, "filename": "a_381.wav"}, {"vowel": "a", "number": 382, "filename": "a_382.wav"}, {"vowel": "a", "number": 383, "filename": "a_383.wav"}, {"vowel": "a", "number": 384, "filename": "a_384.wav"}, {"vowel": "a", "number": 385, "filename": "a_385.wav"}, {"vowel": "a", "number": 386, "filename": "a_386.wav"}, {"vowel": "a", "number": 387, "filename": "a_387.wav"}, {"vowel": "a", "number": 388, "filename": "a_388.wav"}, {"vowel": "a", "number": 389, "filename": "a_389.wav"}, {"vowel": "a", "number": 390, "filename": "a_390.wav"}, {"vowel": "a", "number": 391, "filename": "a_391.wav"}, {"vowel": "a", "number": 392, "filename": "a_392.wav"}, {"vowel": "a", "number": 393, "filename": "a_393.wav"}, {"vowel": "a", "number": 394, "filename": "a_394.wav"}, {"vowel": "a", "number": 395, "filename": "a_395.wav"}, {"vowel": "a", "number": 396, "filename": "a_396.wav"}, {"vowel": "a", "number": 397, "filename": "a_397.wav"}, {"vowel": "a", "number": 4, "filename": "a_4.wav"}, {"vowel": "a", "number": 401, "filename": "a_401.wav"}, {"vowel": "a", "number": 402, "filename": "a_402.wav"}, {"vowel": "a", "number": 403, "filename": "a_403.wav"}, {"vowel": "a", "number": 404, "filename": "a_404.wav"}, {"vowel": "a", "number": 405, "filename": "a_405.wav"}, {"vowel": "a", "number": 406, "filename": "a_406.wav"}, {"vowel": "a", "number": 407, "filename": "a_407.wav"}, {"vowel": "a", "number": 408, "filename": "a_408.wav"}, {"vowel": "a", "number": 409, "filename": "a_409.wav"}, {"vowel": "a", "number": 410, "filename": "a_410.wav"}, {"vowel": "a", "number": 411, "filename": "a_411.wav"}, {"vowel": "a", "number": 412, "filename": "a_412.wav"}, {"vowel": "a", "number": 413, "filename": "a_413.wav"}, {"vowel": "a", "number": 414, "filename": "a_414.wav"}, {"vowel": "a", "number": 415, "filename": "a_415.wav"}, {"vowel": "a", "number": 416, "filename": "a_416.wav"}, {"vowel": "a", "number": 442, "filename": "a_442.wav"}, {"vowel": "a", "number": 443, "filename": "a_443.wav"}, {"vowel": "a", "number": 444, "filename": "a_444.wav"}, {"vowel": "a", "number": 445, "filename": "a_445.wav"}, {"vowel": "a", "number": 446, "filename": "a_446.wav"}, {"vowel": "a", "number": 454, "filename": "a_454.wav"}, {"vowel": "a", "number": 455, "filename": "a_455.wav"}, {"vowel": "a", "number": 471, "filename": "a_471.wav"}, {"vowel": "a", "number": 473, "filename": "a_473.wav"}, {"vowel": "a", "number": 475, "filename": "a_475.wav"}, {"vowel": "a", "number": 483, "filename": "a_483.wav"}, {"vowel": "a", "number": 485, "filename": "a_485.wav"}, {"vowel": "a", "number": 5, "filename": "a_5.wav"}, {"vowel": "a", "number": 516, "filename": "a_516.wav"}, {"vowel": "a", "number": 517, "filename": "a_517.wav"}, {"vowel": "a", "number": 518, "filename": "a_518.wav"}, {"vowel": "a", "number": 519, "filename": "a_519.wav"}, {"vowel": "a", "number": 52, "filename": "a_52.wav"}, {"vowel": "a", "number": 54, "filename": "a_54.wav"}, {"vowel": "a", "number": 56, "filename": "a_56.wav"}, {"vowel": "a", "number": 6, "filename": "a_6.wav"}, {"vowel": "a", "number": 7, "filename": "a_7.wav"}, {"vowel": "a", "number": 8, "filename": "a_8.wav"}, {"vowel": "a", "number": 80, "filename": "a_80.wav"}, {"vowel": "a", "number": 81, "filename": "a_81.wav"}, {"vowel": "a", "number": 82, "filename": "a_82.wav"}, {"vowel": "a", "number": 83, "filename": "a_83.wav"}, {"vowel": "a", "number": 84, "filename": "a_84.wav"}, {"vowel": "a", "number": 85, "filename": "a_85.wav"}, {"vowel": "a", "number": 86, "filename": "a_86.wav"}, {"vowel": "a", "number": 87, "filename": "a_87.wav"}, {"vowel": "a", "number": 88, "filename": "a_88.wav"}, {"vowel": "a", "number": 9, "filename": "a_9.wav"}, {"vowel": "e", "number": 108, "filename": "e_108.wav"}, {"vowel": "e", "number": 109, "filename": "e_109.wav"}, {"vowel": "e", "number": 110, "filename": "e_110.wav"}, {"vowel": "e", "number": 139, "filename": "e_139.wav"}, {"vowel": "e", "number": 141, "filename": "e_141.wav"}, {"vowel": "e", "number": 143, "filename": "e_143.wav"}, {"vowel": "e", "number": 145, "filename": "e_145.wav"}, {"vowel": "e", "number": 147, "filename": "e_147.wav"}, {"vowel": "e", "number": 149, "filename": "e_149.wav"}, {"vowel": "e", "number": 15, "filename": "e_15.wav"}, {"vowel": "e", "number": 158, "filename": "e_158.wav"}, {"vowel": "e", "number": 159, "filename": "e_159.wav"}, {"vowel": "e", "number": 16, "filename": "e_16.wav"}, {"vowel": "e", "number": 160, "filename": "e_160.wav"}, {"vowel": "e", "number": 17, "filename": "e_17.wav"}, {"vowel": "e", "number": 170, "filename": "e_170.wav"}, {"vowel": "e", "number": 171, "filename": "e_171.wav"}, {"vowel": "e", "number": 172, "filename": "e_172.wav"}, {"vowel": "e", "number": 174, "filename": "e_174.wav"}, {"vowel": "e", "number": 176, "filename": "e_176.wav"}, {"vowel": "e", "number": 178, "filename": "e_178.wav"}, {"vowel": "e", "number": 18, "filename": "e_18.wav"}, {"vowel": "e", "number": 180, "filename": "e_180.wav"}, {"vowel": "e", "number": 183, "filename": "e_183.wav"}, {"vowel": "e", "number": 186, "filename": "e_186.wav"}, {"vowel": "e", "number": 192, "filename": "e_192.wav"}, {"vowel": "e", "number": 193, "filename": "e_193.wav"}, {"vowel": "e", "number": 194, "filename": "e_194.wav"}, {"vowel": "e", "number": 195, "filename": "e_195.wav"}, {"vowel": "e", "number": 196, "filename": "e_196.wav"}, {"vowel": "e", "number": 197, "filename": "e_197.wav"}, {"vowel": "e", "number": 198, "filename": "e_198.wav"}, {"vowel": "e", "number": 210, "filename": "e_210.wav"}, {"vowel": "e", "number": 211, "filename": "e_211.wav"}, {"vowel": "e", "number": 212, "filename": "e_212.wav"}, {"vowel": "e", "number": 213, "filename": "e_213.wav"}, {"vowel": "e", "number": 214, "filename": "e_214.wav"}, {"vowel": "e", "number": 215, "filename": "e_215.wav"}, {"vowel": "e", "number": 216, "filename": "e_216.wav"}, {"vowel": "e", "number": 218, "filename": "e_218.wav"}, {"vowel": "e", "number": 220, "filename": "e_220.wav"}, {"vowel": "e", "number": 222, "filename": "e_222.wav"}, {"vowel": "e", "number": 224, "filename": "e_224.wav"}, {"vowel": "e", "number": 225, "filename": "e_225.wav"}, {"vowel": "e", "number": 226, "filename": "e_226.wav"}, {"vowel": "e", "number": 227, "filename": "e_227.wav"}, {"vowel": "e", "number": 228, "filename": "e_228.wav"}, {"vowel": "e", "number": 234, "filename": "e_234.wav"}, {"vowel": "e", "number": 236, "filename": "e_236.wav"}, {"vowel": "e", "number": 237, "filename": "e_237.wav"}, {"vowel": "e", "number": 238, "filename": "e_238.wav"}, {"vowel": "e", "number": 239, "filename": "e_239.wav"}, {"vowel": "e", "number": 240, "filename": "e_240.wav"}, {"vowel": "e", "number": 241, "filename": "e_241.wav"}, {"vowel": "e", "number": 242, "filename": "e_242.wav"}, {"vowel": "e", "number": 244, "filename": "e_244.wav"}, {"vowel": "e", "number": 245, "filename": "e_245.wav"}, {"vowel": "e", "number": 247, "filename": "e_247.wav"}, {"vowel": "e", "number": 248, "filename": "e_248.wav"}, {"vowel": "e", "number": 250, "filename": "e_250.wav"}, {"vowel": "e", "number": 251, "filename": "e_251.wav"}, {"vowel": "e", "number": 271, "filename": "e_271.wav"}, {"vowel": "e", "number": 272, "filename": "e_272.wav"}, {"vowel": "e", "number": 273, "filename": "e_273.wav"}, {"vowel": "e", "number": 29, "filename": "e_29.wav"}, {"vowel": "e", "number": 30, "filename": "e_30.wav"}, {"vowel": "e", "number": 309, "filename": "e_309.wav"}, {"vowel": "e", "number": 310, "filename": "e_310.wav"}, {"vowel": "e", "number": 311, "filename": "e_311.wav"}, {"vowel": "e", "number": 330, "filename": "e_330.wav"}, {"vowel": "e", "number": 331, "filename": "e_331.wav"}, {"vowel": "e", "number": 332, "filename": "e_332.wav"}, {"vowel": "e", "number": 333, "filename": "e_333.wav"}, {"vowel": "e", "number": 334, "filename": "e_334.wav"}, {"vowel": "e", "number": 335, "filename": "e_335.wav"}, {"vowel": "e", "number": 336, "filename": "e_336.wav"}, {"vowel": "e", "number": 337, "filename": "e_337.wav"}, {"vowel": "e", "number": 338, "filename": "e_338.wav"}, {"vowel": "e", "number": 35, "filename": "e_35.wav"}, {"vowel": "e", "number": 361, "filename": "e_361.wav"}, {"vowel": "e", "number": 363, "filename": "e_363.wav"}, {"vowel": "e", "number": 365, "filename": "e_365.wav"}, {"vowel": "e", "number": 37, "filename": "e_37.wav"}, {"vowel": "e", "number": 39, "filename": "e_39.wav"}, {"vowel": "e", "number": 398, "filename": "e_398.wav"}, {"vowel": "e", "number": 399, "filename": "e_399.wav"}, {"vowel": "e", "number": 400, "filename": "e_400.wav"}, {"vowel": "e", "number": 41, "filename": "e_41.wav"}, {"vowel": "e", "number": 425, "filename": "e_425.wav"}, {"vowel": "e", "number": 428, "filename": "e_428.wav"}, {"vowel": "e", "number": 43, "filename": "e_43.wav"}, {"vowel": "e", "number": 45, "filename": "e_45.wav"}, {"vowel": "e", "number": 451, "filename": "e_451.wav"}, {"vowel": "e", "number": 452, "filename": "e_452.wav"}, {"vowel": "e", "number": 453, "filename": "e_453.wav"}, {"vowel": "e", "number": 456, "filename": "e_456.wav"}, {"vowel": "e", "number": 457, "filename": "e_457.wav"}, {"vowel": "e", "number": 458, "filename": "e_458.wav"}, {"vowel": "e", "number": 459, "filename": "e_459.wav"}, {"vowel": "e", "number": 460, "filename": "e_460.wav"}, {"vowel": "e", "number": 462, "filename": "e_462.wav"}, {"vowel": "e", "number": 464, "filename": "e_464.wav"}, {"vowel": "e", "number": 47, "filename": "e_47.wav"}, {"vowel": "e", "number": 478, "filename": "e_478.wav"}, {"vowel": "e", "number": 479, "filename": "e_479.wav"}, {"vowel": "e", "number": 480, "filename": "e_480.wav"}, {"vowel": "e", "number": 481, "filename": "e_481.wav"}, {"vowel": "e", "number": 482, "filename": "e_482.wav"}, {"vowel": "e", "number": 484, "filename": "e_484.wav"}, {"vowel": "e", "number": 514, "filename": "e_514.wav"}, {"vowel": "e", "number": 515, "filename": "e_515.wav"}, {"vowel": "e", "number": 527, "filename": "e_527.wav"}, {"vowel": "e", "number": 528, "filename": "e_528.wav"}, {"vowel": "e", "number": 529, "filename": "e_529.wav"}, {"vowel": "e", "number": 530, "filename": "e_530.wav"}, {"vowel": "e", "number": 531, "filename": "e_531.wav"}, {"vowel": "e", "number": 532, "filename": "e_532.wav"}, {"vowel": "e", "number": 533, "filename": "e_533.wav"}, {"vowel": "e", "number": 535, "filename": "e_535.wav"}, {"vowel": "e", "number": 537, "filename": "e_537.wav"}, {"vowel": "e", "number": 77, "filename": "e_77.wav"}, {"vowel": "e", "number": 78, "filename": "e_78.wav"}, {"vowel": "e", "number": 79, "filename": "e_79.wav"}, {"vowel": "e", "number": 89, "filename": "e_89.wav"}, {"vowel": "e", "number": 90, "filename": "e_90.wav"}, {"vowel": "e", "number": 91, "filename": "e_91.wav"}, {"vowel": "e", "number": 92, "filename": "e_92.wav"}, {"vowel": "e", "number": 93, "filename": "e_93.wav"}, {"vowel": "e", "number": 94, "filename": "e_94.wav"}, {"vowel": "i", "number": 102, "filename": "i_102.wav"}, {"vowel": "i", "number": 103, "filename": "i_103.wav"}, {"vowel": "i", "number": 105, "filename": "i_105.wav"}, {"vowel": "i", "number": 106, "filename": "i_106.wav"}, {"vowel": "i", "number": 107, "filename": "i_107.wav"}, {"vowel": "i", "number": 164, "filename": "i_164.wav"}, {"vowel": "i", "number": 165, "filename": "i_165.wav"}, {"vowel": "i", "number": 166, "filename": "i_166.wav"}, {"vowel": "i", "number": 167, "filename": "i_167.wav"}, {"vowel": "i", "number": 168, "filename": "i_168.wav"}, {"vowel": "i", "number": 169, "filename": "i_169.wav"}, {"vowel": "i", "number": 181, "filename": "i_181.wav"}, {"vowel": "i", "number": 182, "filename": "i_182.wav"}, {"vowel": "i", "number": 184, "filename": "i_184.wav"}, {"vowel": "i", "number": 185, "filename": "i_185.wav"}, {"vowel": "i", "number": 187, "filename": "i_187.wav"}, {"vowel": "i", "number": 188, "filename": "i_188.wav"}, {"vowel": "i", "number": 189, "filename": "i_189.wav"}, {"vowel": "i", "number": 19, "filename": "i_19.wav"}, {"vowel": "i", "number": 190, "filename": "i_190.wav"}, {"vowel": "i", "number": 191, "filename": "i_191.wav"}, {"vowel": "i", "number": 20, "filename": "i_20.wav"}, {"vowel": "i", "number": 21, "filename": "i_21.wav"}, {"vowel": "i", "number": 217, "filename": "i_217.wav"}, {"vowel": "i", "number": 219, "filename": "i_219.wav"}, {"vowel": "i", "number": 22, "filename": "i_22.wav"}, {"vowel": "i", "number": 221, "filename": "i_221.wav"}, {"vowel": "i", "number": 223, "filename": "i_223.wav"}, {"vowel": "i", "number": 229, "filename": "i_229.wav"}, {"vowel": "i", "number": 23, "filename": "i_23.wav"}, {"vowel": "i", "number": 230, "filename": "i_230.wav"}, {"vowel": "i", "number": 231, "filename": "i_231.wav"}, {"vowel": "i", "number": 232, "filename": "i_232.wav"}, {"vowel": "i", "number": 233, "filename": "i_233.wav"}, {"vowel": "i", "number": 235, "filename": "i_235.wav"}, {"vowel": "i", "number": 24, "filename": "i_24.wav"}, {"vowel": "i", "number": 243, "filename": "i_243.wav"}, {"vowel": "i", "number": 246, "filename": "i_246.wav"}, {"vowel": "i", "number": 249, "filename": "i_249.wav"}, {"vowel": "i", "number": 25, "filename": "i_25.wav"}, {"vowel": "i", "number": 255, "filename": "i_255.wav"}, {"vowel": "i", "number": 256, "filename": "i_256.wav"}, {"vowel": "i", "number": 257, "filename": "i_257.wav"}, {"vowel": "i", "number": 258, "filename": "i_258.wav"}, {"vowel": "i", "number": 259, "filename": "i_259.wav"}, {"vowel": "i", "number": 26, "filename": "i_26.wav"}, {"vowel": "i", "number": 260, "filename": "i_260.wav"}, {"vowel": "i", "number": 261, "filename": "i_261.wav"}, {"vowel": "i", "number": 27, "filename": "i_27.wav"}, {"vowel": "i", "number": 277, "filename": "i_277.wav"}, {"vowel": "i", "number": 278, "filename": "i_278.wav"}, {"vowel": "i", "number": 279, "filename": "i_279.wav"}, {"vowel": "i", "number": 28, "filename": "i_28.wav"}, {"vowel": "i", "number": 280, "filename": "i_280.wav"}, {"vowel": "i", "number": 281, "filename": "i_281.wav"}, {"vowel": "i", "number": 282, "filename": "i_282.wav"}, {"vowel": "i", "number": 298, "filename": "i_298.wav"}, {"vowel": "i", "number": 299, "filename": "i_299.wav"}, {"vowel": "i", "number": 300, "filename": "i_300.wav"}, {"vowel": "i", "number": 301, "filename": "i_301.wav"}, {"vowel": "i", "number": 302, "filename": "i_302.wav"}, {"vowel": "i", "number": 303, "filename": "i_303.wav"}, {"vowel": "i", "number": 327, "filename": "i_327.wav"}, {"vowel": "i", "number": 328, "filename": "i_328.wav"}, {"vowel": "i", "number": 329, "filename": "i_329.wav"}, {"vowel": "i", "number": 339, "filename": "i_339.wav"}, {"vowel": "i", "number": 340, "filename": "i_340.wav"}, {"vowel": "i", "number": 341, "filename": "i_341.wav"}, {"vowel": "i", "number": 417, "filename": "i_417.wav"}, {"vowel": "i", "number": 418, "filename": "i_418.wav"}, {"vowel": "i", "number": 419, "filename": "i_419.wav"}, {"vowel": "i", "number": 420, "filename": "i_420.wav"}, {"vowel": "i", "number": 421, "filename": "i_421.wav"}, {"vowel": "i", "number": 422, "filename": "i_422.wav"}, {"vowel": "i", "number": 423, "filename": "i_423.wav"}, {"vowel": "i", "number": 424, "filename": "i_424.wav"}, {"vowel": "i", "number": 426, "filename": "i_426.wav"}, {"vowel": "i", "number": 427, "filename": "i_427.wav"}, {"vowel": "i", "number": 429, "filename": "i_429.wav"}, {"vowel": "i", "number": 430, "filename": "i_430.wav"}, {"vowel": "i", "number": 447, "filename": "i_447.wav"}, {"vowel": "i", "number": 448, "filename": "i_448.wav"}, {"vowel": "i", "number": 449, "filename": "i_449.wav"}, {"vowel": "i", "number": 450, "filename": "i_450.wav"}, {"vowel": "i", "number": 465, "filename": "i_465.wav"}, {"vowel": "i", "number": 466, "filename": "i_466.wav"}, {"vowel": "i", "number": 467, "filename": "i_467.wav"}, {"vowel": "i", "number": 48, "filename": "i_48.wav"}, {"vowel": "i", "number": 486, "filename": "i_486.wav"}, {"vowel": "i", "number": 49, "filename": "i_49.wav"}, {"vowel": "i", "number": 491, "filename": "i_491.wav"}, {"vowel": "i", "number": 493, "filename": "i_493.wav"}, {"vowel": "i", "number": 496, "filename": "i_496.wav"}, {"vowel": "i", "number": 497, "filename": "i_497.wav"}, {"vowel": "i", "number": 498, "filename": "i_498.wav"}, {"vowel": "i", "number": 499, "filename": "i_499.wav"}, {"vowel": "i", "number": 50, "filename": "i_50.wav"}, {"vowel": "i", "number": 500, "filename": "i_500.wav"}, {"vowel": "i", "number": 501, "filename": "i_501.wav"}, {"vowel": "i", "number": 539, "filename": "i_539.wav"}, {"vowel": "i", "number": 540, "filename": "i_540.wav"}, {"vowel": "i", "number": 541, "filename": "i_541.wav"}, {"vowel": "i", "number": 542, "filename": "i_542.wav"}, {"vowel": "i", "number": 68, "filename": "i_68.wav"}, {"vowel": "i", "number": 69, "filename": "i_69.wav"}, {"vowel": "i", "number": 70, "filename": "i_70.wav"}, {"vowel": "i", "number": 71, "filename": "i_71.wav"}, {"vowel": "i", "number": 72, "filename": "i_72.wav"}, {"vowel": "i", "number": 73, "filename": "i_73.wav"}, {"vowel": "o", "number": 111, "filename": "o_111.wav"}, {"vowel": "o", "number": 112, "filename": "o_112.wav"}, {"vowel": "o", "number": 113, "filename": "o_113.wav"}, {"vowel": "o", "number": 114, "filename": "o_114.wav"}, {"vowel": "o", "number": 115, "filename": "o_115.wav"}, {"vowel": "o", "number": 116, "filename": "o_116.wav"}, {"vowel": "o", "number": 117, "filename": "o_117.wav"}, {"vowel": "o", "number": 118, "filename": "o_118.wav"}, {"vowel": "o", "number": 119, "filename": "o_119.wav"}, {"vowel": "o", "number": 120, "filename": "o_120.wav"}, {"vowel": "o", "number": 121, "filename": "o_121.wav"}, {"vowel": "o", "number": 122, "filename": "o_122.wav"}, {"vowel": "o", "number": 126, "filename": "o_126.wav"}, {"vowel": "o", "number": 127, "filename": "o_127.wav"}, {"vowel": "o", "number": 128, "filename": "o_128.wav"}, {"vowel": "o", "number": 129, "filename": "o_129.wav"}, {"vowel": "o", "number": 130, "filename": "o_130.wav"}, {"vowel": "o", "number": 131, "filename": "o_131.wav"}, {"vowel": "o", "number": 132, "filename": "o_132.wav"}, {"vowel": "o", "number": 133, "filename": "o_133.wav"}, {"vowel": "o", "number": 134, "filename": "o_134.wav"}, {"vowel": "o", "number": 135, "filename": "o_135.wav"}, {"vowel": "o", "number": 136, "filename": "o_136.wav"}, {"vowel": "o", "number": 137, "filename": "o_137.wav"}, {"vowel": "o", "number": 138, "filename": "o_138.wav"}, {"vowel": "o", "number": 321, "filename": "o_321.wav"}, {"vowel": "o", "number": 323, "filename": "o_323.wav"}, {"vowel": "o", "number": 325, "filename": "o_325.wav"}, {"vowel": "o", "number": 344, "filename": "o_344.wav"}, {"vowel": "o", "number": 345, "filename": "o_345.wav"}, {"vowel": "o", "number": 346, "filename": "o_346.wav"}, {"vowel": "o", "number": 347, "filename": "o_347.wav"}, {"vowel": "o", "number": 348, "filename": "o_348.wav"}, {"vowel": "o", "number": 349, "filename": "o_349.wav"}, {"vowel": "o", "number": 350, "filename": "o_350.wav"}, {"vowel": "o", "number": 351, "filename": "o_351.wav"}, {"vowel": "o", "number": 352, "filename": "o_352.wav"}, {"vowel": "o", "number": 353, "filename": "o_353.wav"}, {"vowel": "o", "number": 354, "filename": "o_354.wav"}, {"vowel": "o", "number": 355, "filename": "o_355.wav"}, {"vowel": "o", "number": 356, "filename": "o_356.wav"}, {"vowel": "o", "number": 357, "filename": "o_357.wav"}, {"vowel": "o", "number": 358, "filename": "o_358.wav"}, {"vowel": "o", "number": 359, "filename": "o_359.wav"}, {"vowel": "o", "number": 360, "filename": "o_360.wav"}, {"vowel": "o", "number": 434, "filename": "o_434.wav"}, {"vowel": "o", "number": 435, "filename": "o_435.wav"}, {"vowel": "o", "number": 436, "filename": "o_436.wav"}, {"vowel": "o", "number": 437, "filename": "o_437.wav"}, {"vowel": "o", "number": 438, "filename": "o_438.wav"}, {"vowel": "o", "number": 439, "filename": "o_439.wav"}, {"vowel": "o", "number": 440, "filename": "o_440.wav"}, {"vowel": "o", "number": 441, "filename": "o_441.wav"}, {"vowel": "o", "number": 510, "filename": "o_510.wav"}, {"vowel": "o", "number": 511, "filename": "o_511.wav"}, {"vowel": "o", "number": 512, "filename": "o_512.wav"}, {"vowel": "o", "number": 513, "filename": "o_513.wav"}, {"vowel": "o", "number": 520, "filename": "o_520.wav"}, {"vowel": "o", "number": 521, "filename": "o_521.wav"}, {"vowel": "o", "number": 543, "filename": "o_543.wav"}, {"vowel": "o", "number": 544, "filename": "o_544.wav"}, {"vowel": "o", "number": 545, "filename": "o_545.wav"}, {"vowel": "o", "number": 546, "filename": "o_546.wav"}, {"vowel": "o", "number": 547, "filename": "o_547.wav"}, {"vowel": "o", "number": 549, "filename": "o_549.wav"}, {"vowel": "o", "number": 551, "filename": "o_551.wav"}, {"vowel": "o", "number": 553, "filename": "o_553.wav"}, {"vowel": "u", "number": 123, "filename": "u_123.wav"}, {"vowel": "u", "number": 124, "filename": "u_124.wav"}, {"vowel": "u", "number": 125, "filename": "u_125.wav"}, {"vowel": "u", "number": 140, "filename": "u_140.wav"}, {"vowel": "u", "number": 142, "filename": "u_142.wav"}, {"vowel": "u", "number": 144, "filename": "u_144.wav"}, {"vowel": "u", "number": 146, "filename": "u_146.wav"}, {"vowel": "u", "number": 148, "filename": "u_148.wav"}, {"vowel": "u", "number": 150, "filename": "u_150.wav"}, {"vowel": "u", "number": 151, "filename": "u_151.wav"}, {"vowel": "u", "number": 152, "filename": "u_152.wav"}, {"vowel": "u", "number": 153, "filename": "u_153.wav"}, {"vowel": "u", "number": 154, "filename": "u_154.wav"}, {"vowel": "u", "number": 199, "filename": "u_199.wav"}, {"vowel": "u", "number": 200, "filename": "u_200.wav"}, {"vowel": "u", "number": 201, "filename": "u_201.wav"}, {"vowel": "u", "number": 202, "filename": "u_202.wav"}, {"vowel": "u", "number": 203, "filename": "u_203.wav"}, {"vowel": "u", "number": 204, "filename": "u_204.wav"}, {"vowel": "u", "number": 205, "filename": "u_205.wav"}, {"vowel": "u", "number": 206, "filename": "u_206.wav"}, {"vowel": "u", "number": 207, "filename": "u_207.wav"}, {"vowel": "u", "number": 208, "filename": "u_208.wav"}, {"vowel": "u", "number": 209, "filename": "u_209.wav"}, {"vowel": "u", "number": 252, "filename": "u_252.wav"}, {"vowel": "u", "number": 253, "filename": "u_253.wav"}, {"vowel": "u", "number": 254, "filename": "u_254.wav"}, {"vowel": "u", "number": 295, "filename": "u_295.wav"}, {"vowel": "u", "number": 296, "filename": "u_296.wav"}, {"vowel": "u", "number": 297, "filename": "u_297.wav"}, {"vowel": "u", "number": 31, "filename": "u_31.wav"}, {"vowel": "u", "number": 32, "filename": "u_32.wav"}, {"vowel": "u", "number": 33, "filename": "u_33.wav"}, {"vowel": "u", "number": 34, "filename": "u_34.wav"}, {"vowel": "u", "number": 36, "filename": "u_36.wav"}, {"vowel": "u", "number": 362, "filename": "u_362.wav"}, {"vowel": "u", "number": 364, "filename": "u_364.wav"}, {"vowel": "u", "number": 366, "filename": "u_366.wav"}, {"vowel": "u", "number": 38, "filename": "u_38.wav"}, {"vowel": "u", "number": 40, "filename": "u_40.wav"}, {"vowel": "u", "number": 42, "filename": "u_42.wav"}, {"vowel": "u", "number": 44, "filename": "u_44.wav"}, {"vowel": "u", "number": 46, "filename": "u_46.wav"}, {"vowel": "u", "number": 461, "filename": "u_461.wav"}, {"vowel": "u", "number": 463, "filename": "u_463.wav"}, {"vowel": "u", "number": 490, "filename": "u_490.wav"}, {"vowel": "u", "number": 492, "filename": "u_492.wav"}, {"vowel": "u", "number": 494, "filename": "u_494.wav"}, {"vowel": "u", "number": 495, "filename": "u_495.wav"}, {"vowel": "u", "number": 534, "filename": "u_534.wav"}, {"vowel": "u", "number": 536, "filename": "u_536.wav"}, {"vowel": "u", "number": 538, "filename": "u_538.wav"}, {"vowel": "u", "number": 65, "filename": "u_65.wav"}, {"vowel": "u", "number": 66, "filename": "u_66.wav"}, {"vowel": "u", "number": 67, "filename": "u_67.wav"}, {"vowel": "ə", "number": 100, "filename": "ə_100.wav"}, {"vowel": "ə", "number": 101, "filename": "ə_101.wav"}, {"vowel": "ə", "number": 104, "filename": "ə_104.wav"}, {"vowel": "ə", "number": 262, "filename": "ə_262.wav"}, {"vowel": "ə", "number": 264, "filename": "ə_264.wav"}, {"vowel": "ə", "number": 266, "filename": "ə_266.wav"}, {"vowel": "ə", "number": 268, "filename": "ə_268.wav"}, {"vowel": "ə", "number": 269, "filename": "ə_269.wav"}, {"vowel": "ə", "number": 270, "filename": "ə_270.wav"}, {"vowel": "ə", "number": 274, "filename": "ə_274.wav"}, {"vowel": "ə", "number": 275, "filename": "ə_275.wav"}, {"vowel": "ə", "number": 276, "filename": "ə_276.wav"}, {"vowel": "ə", "number": 283, "filename": "ə_283.wav"}, {"vowel": "ə", "number": 285, "filename": "ə_285.wav"}, {"vowel": "ə", "number": 287, "filename": "ə_287.wav"}, {"vowel": "ə", "number": 289, "filename": "ə_289.wav"}, {"vowel": "ə", "number": 291, "filename": "ə_291.wav"}, {"vowel": "ə", "number": 293, "filename": "ə_293.wav"}, {"vowel": "ə", "number": 304, "filename": "ə_304.wav"}, {"vowel": "ə", "number": 305, "filename": "ə_305.wav"}, {"vowel": "ə", "number": 306, "filename": "ə_306.wav"}, {"vowel": "ə", "number": 307, "filename": "ə_307.wav"}, {"vowel": "ə", "number": 308, "filename": "ə_308.wav"}, {"vowel": "ə", "number": 322, "filename": "ə_322.wav"}, {"vowel": "ə", "number": 324, "filename": "ə_324.wav"}, {"vowel": "ə", "number": 326, "filename": "ə_326.wav"}, {"vowel": "ə", "number": 367, "filename": "ə_367.wav"}, {"vowel": "ə", "number": 368, "filename": "ə_368.wav"}, {"vowel": "ə", "number": 369, "filename": "ə_369.wav"}, {"vowel": "ə", "number": 431, "filename": "ə_431.wav"}, {"vowel": "ə", "number": 432, "filename": "ə_432.wav"}, {"vowel": "ə", "number": 433, "filename": "ə_433.wav"}, {"vowel": "ə", "number": 468, "filename": "ə_468.wav"}, {"vowel": "ə", "number": 469, "filename": "ə_469.wav"}, {"vowel": "ə", "number": 470, "filename": "ə_470.wav"}, {"vowel": "ə", "number": 472, "filename": "ə_472.wav"}, {"vowel": "ə", "number": 474, "filename": "ə_474.wav"}, {"vowel": "ə", "number": 476, "filename": "ə_476.wav"}, {"vowel": "ə", "number": 477, "filename": "ə_477.wav"}, {"vowel": "ə", "number": 487, "filename": "ə_487.wav"}, {"vowel": "ə", "number": 488, "filename": "ə_488.wav"}, {"vowel": "ə", "number": 489, "filename": "ə_489.wav"}, {"vowel": "ə", "number": 502, "filename": "ə_502.wav"}, {"vowel": "ə", "number": 503, "filename": "ə_503.wav"}, {"vowel": "ə", "number": 504, "filename": "ə_504.wav"}, {"vowel": "ə", "number": 505, "filename": "ə_505.wav"}, {"vowel": "ə", "number": 506, "filename": "ə_506.wav"}, {"vowel": "ə", "number": 507, "filename": "ə_507.wav"}, {"vowel": "ə", "number": 508, "filename": "ə_508.wav"}, {"vowel": "ə", "number": 509, "filename": "ə_509.wav"}, {"vowel": "ə", "number": 51, "filename": "ə_51.wav"}, {"vowel": "ə", "number": 522, "filename": "ə_522.wav"}, {"vowel": "ə", "number": 523, "filename": "ə_523.wav"}, {"vowel": "ə", "number": 524, "filename": "ə_524.wav"}, {"vowel": "ə", "number": 525, "filename": "ə_525.wav"}, {"vowel": "ə", "number": 526, "filename": "ə_526.wav"}, {"vowel": "ə", "number": 53, "filename": "ə_53.wav"}, {"vowel": "ə", "number": 548, "filename": "ə_548.wav"}, {"vowel": "ə", "number": 55, "filename": "ə_55.wav"}, {"vowel": "ə", "number": 550, "filename": "ə_550.wav"}, {"vowel": "ə", "number": 552, "filename": "ə_552.wav"}, {"vowel": "ə", "number": 554, "filename": "ə_554.wav"}, {"vowel": "ə", "number": 57, "filename": "ə_57.wav"}, {"vowel": "ə", "number": 58, "filename": "ə_58.wav"}, {"vowel": "ə", "number": 59, "filename": "ə_59.wav"}, {"vowel": "ə", "number": 60, "filename": "ə_60.wav"}, {"vowel": "ə", "number": 61, "filename": "ə_61.wav"}, {"vowel": "ə", "number": 62, "filename": "ə_62.wav"}, {"vowel": "ə", "number": 63, "filename": "ə_63.wav"}, {"vowel": "ə", "number": 64, "filename": "ə_64.wav"}, {"vowel": "ə", "number": 74, "filename": "ə_74.wav"}, {"vowel": "ə", "number": 75, "filename": "ə_75.wav"}, {"vowel": "ə", "number": 76, "filename": "ə_76.wav"}, {"vowel": "ə", "number": 95, "filename": "ə_95.wav"}, {"vowel": "ə", "number": 96, "filename": "ə_96.wav"}, {"vowel": "ə", "number": 97, "filename": "ə_97.wav"}, {"vowel": "ə", "number": 98, "filename": "ə_98.wav"}, {"vowel": "ə", "number": 99, "filename": "ə_99.wav"}];
+const VOWELS = ["a", "e", "i", "o", "u", "ə"];
+const QUIZ_LENGTH = 10;
+
+let quizItems = [];
+let current = 0;
+let score = 0;
+let answered = false;
+let currentAudio = null;
+
+function shuffle(array) {
+  const copy = [...array];
+
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+
+  return copy;
+}
+
+function sample(array) {
+  return array[Math.floor(Math.random() * array.length)];
+}
+
+function makeQuizItems() {
+  const byVowel = {};
+
+  for (const item of DATA) {
+    if (!byVowel[item.vowel]) {
+      byVowel[item.vowel] = [];
+    }
+
+    byVowel[item.vowel].push(item);
+  }
+
+  const selected = [];
+  const usedFilenames = new Set();
+
+  // Guarantee that every vowel appears at least once
+  for (const vowel of VOWELS) {
+    const item = sample(byVowel[vowel]);
+    selected.push(item);
+    usedFilenames.add(item.filename);
+  }
+
+  // Fill remaining quiz slots
+  const remaining = DATA.filter(item => !usedFilenames.has(item.filename));
+
+  while (selected.length < QUIZ_LENGTH) {
+    const item = sample(remaining);
+
+    if (!usedFilenames.has(item.filename)) {
+      selected.push(item);
+      usedFilenames.add(item.filename);
+    }
+  }
+
+  return shuffle(selected);
+}
+
+function playAudio(filename) {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+  }
+
+  currentAudio = new Audio(filename);
+
+  currentAudio.play().catch(() => {
+    alert(
+      "Could not play audio file: " + filename +
+      "\n\nMake sure the HTML file and the .wav files are in the same folder."
+    );
+  });
+}
+
+function startQuiz() {
+  quizItems = makeQuizItems();
+  current = 0;
+  score = 0;
+  answered = false;
+  renderQuestion();
+}
+
+function renderQuestion() {
+  answered = false;
+
+  const item = quizItems[current];
+
+  const buttons = VOWELS.map(vowel => `
+    <button class="choice" data-vowel="${vowel}">
+      ${vowel}
+    </button>
+  `).join("");
+
+  document.getElementById("quiz").innerHTML = `
+    <div class="topline">
+      <div>
+        <h1 class="question-title">Вопрос ${current + 1}</h1>
+        <p>Послушайте аудио и выберите ответ.</p>
+      </div>
+      <div class="progress">${current + 1} / ${QUIZ_LENGTH}</div>
+    </div>
+
+    <div class="audio-panel">
+      <p>Сегмент ${current + 1}</p>
+      <button class="primary play" id="play">▶ Воспроизвести звук</button>
+    </div>
+
+    <div class="choices">
+      ${buttons}
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="footer">
+      <button class="secondary" id="restart">Заново</button>
+      <button class="primary" id="next" disabled>Дальше</button>
+    </div>
+  `;
+
+  document.getElementById("play").addEventListener("click", () => {
+    playAudio(item.filename);
+  });
+
+  document.getElementById("restart").addEventListener("click", startQuiz);
+
+  document.querySelectorAll(".choice").forEach(button => {
+    button.addEventListener("click", () => chooseAnswer(button.dataset.vowel));
+  });
+
+  document.getElementById("next").addEventListener("click", nextQuestion);
+}
+
+function chooseAnswer(choice) {
+  if (answered) return;
+
+  answered = true;
+
+  const item = quizItems[current];
+  const correct = item.vowel;
+
+  document.querySelectorAll(".choice").forEach(button => {
+    const vowel = button.dataset.vowel;
+
+    if (vowel === correct) {
+      button.classList.add("correct");
+    }
+
+    if (vowel === choice && choice !== correct) {
+      button.classList.add("incorrect");
+    }
+
+    button.disabled = true;
+  });
+
+  if (choice === correct) {
+    score++;
+    document.getElementById("feedback").textContent = "Верно!";
+  } else {
+    document.getElementById("feedback").textContent = "Правильный ответ: " + correct;
+  }
+
+  document.getElementById("next").disabled = false;
+}
+
+function nextQuestion() {
+  if (current < quizItems.length - 1) {
+    current++;
+    renderQuestion();
+  } else {
+    renderScore();
+  }
+}
+
+function renderScore() {
+  let message = "Супер!";
+
+  if (score === QUIZ_LENGTH) {
+    message = "Идеально!";
+  } else if (score >= Math.ceil(QUIZ_LENGTH * 0.8)) {
+    message = "Хорошая работа!";
+  } else if (score >= Math.ceil(QUIZ_LENGTH * 0.5)) {
+    message = "Хорошая работа, но надо ещё попрактиковаться!";
+  }
+
+  document.getElementById("quiz").innerHTML = `
+    <h1 style="text-align:center;">Тест завершён</h1>
+    <div class="score">${score} / ${QUIZ_LENGTH}</div>
+    <p class="score-message">${message}</p>
+
+    <div class="footer">
+      <button class="secondary" style="display:none;" id="review">Попробовать ещё</button>
+      <button class="primary" id="again">Попробовать ещё</button>
+    </div>
+  `;
+
+  document.getElementById("review").addEventListener("click", startQuiz);
+  document.getElementById("again").addEventListener("click", startQuiz);
+}
+
+document.getElementById("start").addEventListener("click", startQuiz);
+</script>
+</body>
+</html>
